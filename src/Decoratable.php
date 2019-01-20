@@ -36,6 +36,29 @@ trait Decoratable
     }
 
     /**
+     *
+     * NOTE: In base class use __onGet instead of __get to avoid failures.
+     *
+     * @param $name
+     * @return mixed
+     * @throws Exception
+     */
+    public function __get($name)
+    {
+        if (isset($this->__properties[$name])) {
+            return $this->__properties[$name];
+        }
+
+        if (method_exists($this, '__onGet')) {
+            return call_user_func([$this, '__onGet'], $name);
+        }
+
+        $className = get_class($this);
+
+        throw new Exception("Call to undefined method {$className}::{$name}()", 0);
+    }
+
+    /**
      * Add custom method to list
      *
      * @param string $methodName
@@ -52,7 +75,7 @@ trait Decoratable
      * @param string $name
      * @param $value
      */
-    public function Decoratable__addProperty(string $name, $value): void
+    private function Decoratable__addProperty(string $name, $value): void
     {
         $this->__properties[$name] = $value;
     }

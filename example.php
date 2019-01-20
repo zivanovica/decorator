@@ -1,12 +1,34 @@
 <?php
 
-require_once __DIR__ . '/Decoratable.php';
-require_once  __DIR__ . '/Decorator.php';
+require_once __DIR__ . '/src/Decoratable.php';
+require_once __DIR__ . '/src/Decorator.php';
 
-require_once __DIR__ . '/User.php';
+class User
+{
+    use Decoratable;
 
-$a = Decorator::decorate(new User(), 'speak', function () {
-    return $this->name;
-});
+    private $firstName;
+    private $lastName;
 
-var_dump($a->speak());
+    public function __construct(string $firstName, string $lastName) {
+        $this->firstName = $firstName;
+        $this->lastName = $lastName;
+    }
+
+    private function getFullName(): string
+    {
+        return "{$this->firstName} {$this->lastName}";
+    }
+}
+
+$user = Decorator::decorate(new User('Brown', 'Fox'), 'dynamicPhD', true);
+$user = Decorator::decorate(
+    $user,
+    'decoratedGetFullName',
+    function (callable $original, string $title): string {
+        return ($this->dynamicPhD ? 'Dr. ' : '') . "{$title} {$original()}";
+    },
+    User::class
+);
+
+echo $user->decoratedGetFullName('Quick'); // Dr. Quick Brown Fox
