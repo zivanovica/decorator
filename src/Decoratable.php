@@ -22,7 +22,7 @@ trait Decoratable
      */
     public function __call($name, $arguments)
     {
-        if ($this->__methods[$name] ?? false) {
+        if (is_callable($this->__methods[$name] ?? null)) {
             return call_user_func_array($this->__methods[$name], $arguments);
         }
 
