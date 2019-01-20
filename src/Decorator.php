@@ -24,8 +24,7 @@ class Decorator
         }
 
         return is_callable($value) ?
-            self::decorateWithMethod($object, $attributeName, $value) :
-            self::decorateWithProperty($object, $attributeName, $value);
+            self::method($object, $attributeName, $value) : self::property($object, $attributeName, $value);
     }
 
     /**
@@ -36,7 +35,7 @@ class Decorator
      * @param callable $callback
      * @return object
      */
-    private static function decorateWithMethod(object $object, string $methodName, callable $callback): object
+    private static function method(object $object, string $methodName, callable $callback): object
     {
         if (0 !== strpos($methodName, self::METHOD_ACCESS_IDENTIFIER)) {
             return Decorator::invokeDecorateMethod($object, $methodName, $callback, 'Decoratable__addMethod');
@@ -74,7 +73,7 @@ class Decorator
      * @param $value
      * @return object
      */
-    private static function decorateWithProperty(object $object, string $propertyName, $value): object
+    private static function property(object $object, string $propertyName, $value): object
     {
         return Decorator::invokeDecorateMethod($object, $propertyName, $value, 'Decoratable__addProperty');
     }
