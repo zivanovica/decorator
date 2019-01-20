@@ -2,7 +2,7 @@
     "name": "coapsyfactor/decorator",
     "description": "PHP Decorator, dynamicly adding methods and properties with proper scope and $this assigned before execution.",
     "type": "library",
-    "license": "GNU",
+    "license": "Apache-2.0",
     "authors": [
         {
             "name": "Aleksandar Zivanovic",
