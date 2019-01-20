@@ -1,0 +1,14 @@
+{
+    "name": "coapsyfactor/decorator",
+    "description": "PHP Decorator, dynamicly adding methods and properties with proper scope and $this assigned before execution.",
+    "type": "library",
+    "license": "GNU",
+    "authors": [
+        {
+            "name": "Aleksandar Zivanovic",
+            "email": "coapsyfactor@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+}
