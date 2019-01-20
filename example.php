@@ -10,7 +10,8 @@ class User
     private $firstName;
     private $lastName;
 
-    public function __construct(string $firstName, string $lastName) {
+    public function __construct(string $firstName, string $lastName)
+    {
         $this->firstName = $firstName;
         $this->lastName = $lastName;
     }
@@ -21,14 +22,33 @@ class User
     }
 }
 
-$user = Decorator::decorate(new User('Brown', 'Fox'), 'dynamicPhD', true);
-$user = Decorator::decorate(
-    $user,
-    'decoratedGetFullName',
-    function (callable $original, string $title): string {
-        return ($this->dynamicPhD ? 'Dr. ' : '') . "{$title} {$original()}";
-    },
-    User::class
-);
+class Vehicle
+{
+    use Decoratable;
 
-echo $user->decoratedGetFullName('Quick'); // Dr. Quick Brown Fox
+    private $model;
+
+    public function __construct(string $model)
+    {
+        $this->model = $model;
+    }
+
+    private function getModel(): string
+    {
+        return $this->model;
+    }
+}
+
+$info = function (callable $original, string $title): string {
+    return ($this->dynamicPhD ? 'Dr. ' : '') . "{$title} {$original()}";
+};
+
+$user = new User('Brown', 'Fox');
+$vehicle = new Vehicle('Mustang');
+
+Decorator::addDecoration($user, 'dynamicPhD', true);
+Decorator::addDecoration($user, 'decoratedGetFullName', $info, User::class);
+Decorator::addDecoration($vehicle, 'decoratedGetModel', $info);
+
+echo "{$user->decoratedGetFullName('Quick')}\n"; // Dr. Quick Brown Fox
+echo "{$vehicle->decoratedGetModel('Ford')}\n"; // Ford Mustang

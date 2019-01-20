@@ -52,10 +52,6 @@ trait Decoratable
         if (method_exists($this, '__onGet')) {
             return call_user_func([$this, '__onGet'], $name);
         }
-
-        $className = get_class($this);
-
-        throw new Exception("Call to undefined method {$className}::{$name}()", 0);
     }
 
     /**

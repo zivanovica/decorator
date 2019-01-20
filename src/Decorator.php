@@ -9,9 +9,9 @@ class Decorator
      * @param string $attributeName
      * @param $value
      * @param null|string $class
-     * @return object
+     * @return void
      */
-    public static function decorate(object $object, string $attributeName, $value, ?string $class = null): object
+    public static function addDecoration(object $object, string $attributeName, $value, ?string $class = null): void
     {
         $className = get_class($object);
 
@@ -23,8 +23,20 @@ class Decorator
             throw new RuntimeException("{$className} must implement {$class}");
         }
 
-        return is_callable($value) ?
+        is_callable($value) ?
             self::method($object, $attributeName, $value) : self::property($object, $attributeName, $value);
+    }
+
+    /**
+     * @param object $object
+     * @param array $decorations
+     * @param null|string $class
+     */
+    public static function addDecorations(object $object, array $decorations, ?string $class = null): void
+    {
+        foreach ($decorations as $attributeName => $value) {
+            self::addDecoration($object, $attributeName, $value, $class);
+        }
     }
 
     /**
@@ -33,12 +45,14 @@ class Decorator
      * @param object $object
      * @param string $methodName
      * @param callable $callback
-     * @return object
+     * @return void
      */
-    private static function method(object $object, string $methodName, callable $callback): object
+    private static function method(object $object, string $methodName, callable $callback): void
     {
         if (0 !== strpos($methodName, self::METHOD_ACCESS_IDENTIFIER)) {
-            return Decorator::invokeDecorateMethod($object, $methodName, $callback, 'Decoratable__addMethod');
+            Decorator::invokeDecorateMethod($object, $methodName, $callback, 'Decoratable__addMethod');
+
+            return;
         }
 
         $reflection = new ReflectionObject($object);
@@ -62,7 +76,7 @@ class Decorator
             );
         };
 
-        return Decorator::invokeDecorateMethod($object, $methodName, $callback, 'Decoratable__addMethod');
+        Decorator::invokeDecorateMethod($object, $methodName, $callback, 'Decoratable__addMethod');
     }
 
     /**
@@ -71,11 +85,11 @@ class Decorator
      * @param object $object
      * @param string $propertyName
      * @param $value
-     * @return object
+     * @return void
      */
-    private static function property(object $object, string $propertyName, $value): object
+    private static function property(object $object, string $propertyName, $value): void
     {
-        return Decorator::invokeDecorateMethod($object, $propertyName, $value, 'Decoratable__addProperty');
+        Decorator::invokeDecorateMethod($object, $propertyName, $value, 'Decoratable__addProperty');
     }
 
     /**
@@ -85,9 +99,9 @@ class Decorator
      * @param string $propertyName
      * @param $value
      * @param string $method
-     * @return object
+     * @return void
      */
-    private static function invokeDecorateMethod(object $object, string $propertyName, $value, string $method): object
+    private static function invokeDecorateMethod(object $object, string $propertyName, $value, string $method): void
     {
         $reflection = new ReflectionObject($object);
 
@@ -97,8 +111,6 @@ class Decorator
         $decoratorMethod->invoke($object, $propertyName, $value);
 
         unset($reflection, $decoratorMethod);
-
-        return $object;
     }
 
     /**
