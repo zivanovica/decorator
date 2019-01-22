@@ -6,6 +6,8 @@
  * Time: 8:39 AM
  */
 
+namespace PHPDecorator;
+
 trait Decoratable
 {
     private $__methods = [];
@@ -18,7 +20,7 @@ trait Decoratable
      * @param $name
      * @param $arguments
      * @return mixed
-     * @throws Exception
+     * @throws \RuntimeException
      */
     public function __call($name, $arguments)
     {
@@ -32,7 +34,7 @@ trait Decoratable
 
         $className = get_class($this);
 
-        throw new Exception("Call to undefined method {$className}::{$name}()", 0);
+        throw new \RuntimeException("Call to undefined method {$className}::{$name}()", 0);
     }
 
     /**
@@ -41,7 +43,7 @@ trait Decoratable
      *
      * @param $name
      * @return mixed
-     * @throws Exception
+     * @throws \RuntimeException
      */
     public function __get($name)
     {
@@ -62,7 +64,7 @@ trait Decoratable
      */
     private function Decoratable__addMethod(string $methodName, callable $callback): void
     {
-        $this->__methods[$methodName] = Closure::fromCallable($callback)->bindTo($this, get_class($this));
+        $this->__methods[$methodName] = \Closure::fromCallable($callback)->bindTo($this, get_class($this));
     }
 
     /**

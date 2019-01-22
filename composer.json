@@ -12,5 +12,11 @@
     "minimum-stability": "stable",
     "require": {
         "php": ">=7.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "PHPDecorator\\": "./src",
+            "App\\": "./example"
+        }
     }
 }

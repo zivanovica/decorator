@@ -114,6 +114,37 @@ Execution is simple, just by calling e.g ``$original()`` where ``$original`` is 
         echo $user->decoratedGetFullName('Mr'); // Mr. Brown Fox
 ```
 
+##### Decorate with class
+
+Object can also be decorated with some class, all static methods found in provided decorator class will be applied to target object.
+
+Using proper way of accessing data, script provides access to private properties outside class definition.
+
+```php
+    <?php
+    
+        class EntityHydrator
+        {
+            public static function hydrate(callable $context, array $data): void
+            {
+                // $context callable provide us with instance of target as parameter
+                // in this case called $postEntity, and script has access to its private properties
+                $context(function ($user) use ($data) {
+                    // id, firstName, lastName are private properties
+                    $user->id = $data['id'] ?? null;
+                    $user->firstName = $data['firstName'] ?? null;
+                    $user->lastName = $data['lastName'] ?? null;
+                }, User::class);
+            }
+        }
+
+        $user = Decorator::decorateWithClass(new User(), EntityHydrator::class);
+        $user->hydrate(['firstName' => 'Criss', 'lastName' => 'Popo']);
+        
+        echo $user->getFirstName(); // Criss
+        
+```
+
 ##### Decorate property
 
 Add dynamic property to an object

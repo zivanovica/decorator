@@ -1,7 +1,12 @@
 <?php
+/**
+ * Author: Aleksandar Zivanovic
+ */
 
-require_once __DIR__ . '/src/Decoratable.php';
-require_once __DIR__ . '/src/Decorator.php';
+use PHPDecorator\Decoratable;
+use PHPDecorator\Decorator;
+
+require_once __DIR__ . '/../vendor/autoload.php';
 
 class User
 {
@@ -49,6 +54,14 @@ $vehicle = new Vehicle('Mustang');
 Decorator::addDecoration($user, 'dynamicPhD', true);
 Decorator::addDecoration($user, 'decoratedGetFullName', $info, User::class);
 Decorator::addDecoration($vehicle, 'decoratedGetModel', $info);
+
+class A {
+    function getA(){
+        return $this->a;
+    }
+}
+
+Decorator::addClassDecoration($user, A::class);
 
 echo "{$user->decoratedGetFullName('Quick')}\n"; // Dr. Quick Brown Fox
 echo "{$vehicle->decoratedGetModel('Ford')}\n"; // Ford Mustang

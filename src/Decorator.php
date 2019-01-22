@@ -1,5 +1,7 @@
 <?php
 
+namespace PHPDecorator;
+
 class Decorator
 {
     const METHOD_ACCESS_IDENTIFIER = 'decorated';
@@ -9,34 +11,113 @@ class Decorator
      * @param string $attributeName
      * @param $value
      * @param null|string $class
-     * @return void
+     * @return object
      */
-    public static function addDecoration(object $object, string $attributeName, $value, ?string $class = null): void
+    public static function decorate(object $object, string $attributeName, $value, ?string $class = null): object
     {
         $className = get_class($object);
 
         if (false === self::isDecoratable($object)) {
-            throw new RuntimeException("{$className} cannot be decorated. Trait not used");
+            throw new \RuntimeException("{$className} cannot be decorated. Trait not used");
         }
 
         if (null !== $class && false === is_subclass_of($object, $class) && false === $object instanceof $class) {
-            throw new RuntimeException("{$className} must implement {$class}");
+            throw new \RuntimeException("{$className} must implement {$class}");
         }
 
         is_callable($value) ?
             self::method($object, $attributeName, $value) : self::property($object, $attributeName, $value);
+
+        return $object;
+    }
+
+    /**
+     * Decorate provided target with methods from provided decorator class
+     *
+     * @param object $target
+     * @param string $decoratorClass
+     * @param null|string $targetClass
+     * @return object
+     * @throws \ReflectionException
+     */
+    public static function decorateWithClass(object $target, string $decoratorClass, ?string $targetClass = null): object
+    {
+        $className = get_class($target);
+
+        if (false === self::isDecoratable($target)) {
+            throw new \RuntimeException("{$className} cannot be decorated. Trait not used");
+        }
+
+        $reflection = new \ReflectionClass($decoratorClass);
+
+        foreach ($reflection->getMethods(\ReflectionMethod::IS_STATIC) as $method) {
+            $closure = $method->getClosure(null);
+            $context = self::getCallableContext($target);
+
+            self::decorate($target, $method->getName(), function (...$arguments) use ($closure, $context) {
+                array_unshift($arguments, $context);
+
+                return call_user_func_array($closure, $arguments);
+            }, $targetClass);
+        }
+
+        foreach ($reflection->getProperties() as $reflectionProperty) {
+            self::decorate(
+                $target, $reflectionProperty->getName(), $reflectionProperty->getValue($target), $targetClass
+            );
+        }
+
+        return $target;
+    }
+
+    /**
+     * Same as "addClassDecorator", difference is that this one accepts multiple (array) decorator classes
+     *
+     * @param object $target
+     * @param array $decorators
+     * @param null|string $targetClass
+     * @return object
+     * @throws \ReflectionException
+     */
+    public static function decorateWithClasses(object $target, array $decorators, ?string $targetClass = null): object
+    {
+        foreach ($decorators as $decorator) {
+            self::decorateWithClass($target, $decorator, $targetClass);
+        }
+
+        return $target;
     }
 
     /**
      * @param object $object
      * @param array $decorations
      * @param null|string $class
+     * @return object
      */
-    public static function addDecorations(object $object, array $decorations, ?string $class = null): void
+    public static function decorateAll(object $object, array $decorations, ?string $class = null): object
     {
         foreach ($decorations as $attributeName => $value) {
-            self::addDecoration($object, $attributeName, $value, $class);
+            self::decorate($object, $attributeName, $value, $class);
         }
+
+        return $object;
+    }
+
+    /**
+     * Retrieve callable with attached context and scope so that its argument can access private properties
+     *
+     * @param object $target
+     * @return callable
+     */
+    private static function getCallableContext(object $target): callable
+    {
+        return function (callable $callback, ?string $targetClass = null) use ($target) {
+            if (null !== $targetClass && false === $target instanceof $targetClass) {
+                return;
+            }
+
+            \Closure::fromCallable($callback)->bindTo($target, get_class($target))->call($target, $target);
+        };
     }
 
     /**
@@ -55,13 +136,13 @@ class Decorator
             return;
         }
 
-        $reflection = new ReflectionObject($object);
+        $reflection = new \ReflectionObject($object);
 
         $class = get_class($object);
         $decorateMethodName = substr($methodName, strlen(self::METHOD_ACCESS_IDENTIFIER));
 
         if (false === $reflection->hasMethod($decorateMethodName)) {
-            throw new RuntimeException("Method {$decorateMethodName} not found in {$class}");
+            throw new \RuntimeException("Method {$decorateMethodName} not found in {$class}");
         }
 
         $reflectionMethod = $reflection->getMethod($decorateMethodName);
@@ -72,7 +153,7 @@ class Decorator
 
         $callback = function (...$arguments) use ($callback, $originalMethod, $object, $class) {
             return call_user_func_array(
-                Closure::fromCallable($callback)->bindTo($object, $class), array_merge([$originalMethod], $arguments)
+                \Closure::fromCallable($callback)->bindTo($object, $class), array_merge([$originalMethod], $arguments)
             );
         };
 
@@ -103,7 +184,7 @@ class Decorator
      */
     private static function invokeDecorateMethod(object $object, string $propertyName, $value, string $method): void
     {
-        $reflection = new ReflectionObject($object);
+        $reflection = new \ReflectionObject($object);
 
         $decoratorMethod = $reflection->getMethod($method);
 
@@ -119,7 +200,7 @@ class Decorator
      */
     private static function isDecoratable(object $object): bool
     {
-        $reflection = new ReflectionObject($object);
+        $reflection = new \ReflectionObject($object);
 
         return in_array(Decoratable::class, $reflection->getTraitNames());
     }
