@@ -60,12 +60,10 @@ class Decorator
             }, $targetClass);
         }
 
-        foreach ($reflection->getProperties() as $reflectionProperty) {
-            $reflectionProperty->setAccessible(true);
+        foreach ($reflection->getProperties() as $property) {
+            $property->setAccessible(true);
 
-            self::decorate(
-                $target, $reflectionProperty->getName(), $reflectionProperty->getValue($decorator), $targetClass
-            );
+            self::decorate($target, $property->getName(), $property->getValue($decorator), $targetClass);
         }
 
         return $target;
