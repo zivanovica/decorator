@@ -13,7 +13,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 /** @var PostEntity $post */
 $post = Decorator::decorateWithClasses(new PostEntity(), [
-    CRUDDecorator::class, EntityHydrator::class
+    new CRUDDecorator(), new EntityHydrator('post')
 ])->hydrate(['id' => 1, 'title' => 'My first post!', 'content' => 'Hello, World!']);
 
 echo "Title: {$post->getTitle()}\n";
@@ -21,7 +21,7 @@ echo "Content: {$post->getContent()}\n";
 
 /** @var CommentEntity $comment */
 $comment = Decorator::decorateWithClasses(new CommentEntity(), [
-    CRUDDecorator::class, EntityHydrator::class
+    new CRUDDecorator(), new EntityHydrator('comment')
 ]);
 
 $comment->hydrate([

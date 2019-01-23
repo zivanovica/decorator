@@ -35,12 +35,11 @@ class Decorator
      * Decorate provided target with methods from provided decorator class
      *
      * @param object $target
-     * @param string $decoratorClass
+     * @param object $decorator
      * @param null|string $targetClass
      * @return object
-     * @throws \ReflectionException
      */
-    public static function decorateWithClass(object $target, string $decoratorClass, ?string $targetClass = null): object
+    public static function decorateWithClass(object $target, object $decorator, ?string $targetClass = null): object
     {
         $className = get_class($target);
 
@@ -48,10 +47,10 @@ class Decorator
             throw new \RuntimeException("{$className} cannot be decorated. Trait not used");
         }
 
-        $reflection = new \ReflectionClass($decoratorClass);
+        $reflection = new \ReflectionObject($decorator);
 
-        foreach ($reflection->getMethods(\ReflectionMethod::IS_STATIC) as $method) {
-            $closure = $method->getClosure(null);
+        foreach ($reflection->getMethods() as $method) {
+            $closure = $method->getClosure($decorator);
             $context = self::getCallableContext($target);
 
             self::decorate($target, $method->getName(), function (...$arguments) use ($closure, $context) {
@@ -62,8 +61,10 @@ class Decorator
         }
 
         foreach ($reflection->getProperties() as $reflectionProperty) {
+            $reflectionProperty->setAccessible(true);
+
             self::decorate(
-                $target, $reflectionProperty->getName(), $reflectionProperty->getValue($target), $targetClass
+                $target, $reflectionProperty->getName(), $reflectionProperty->getValue($decorator), $targetClass
             );
         }
 
@@ -74,7 +75,7 @@ class Decorator
      * Same as "addClassDecorator", difference is that this one accepts multiple (array) decorator classes
      *
      * @param object $target
-     * @param array $decorators
+     * @param object[] $decorators
      * @param null|string $targetClass
      * @return object
      * @throws \ReflectionException
@@ -116,7 +117,7 @@ class Decorator
                 return;
             }
 
-            \Closure::fromCallable($callback)->bindTo($target, get_class($target))->call($target, $target);
+            \Closure::fromCallable($callback)->bindTo($target, get_class($target))->call($target);
         };
     }
 

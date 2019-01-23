@@ -10,23 +10,36 @@ use App\Entities\PostEntity;
 
 class EntityHydrator
 {
-    public static function hydrate(callable $context, array $data): object
+    /** @var string */
+    private $id;
+
+    public function __construct(string $id)
+    {
+        $this->id = $id;
+    }
+
+    public function hydrate(callable $context, array $data): object
     {
         $entity = null;
+        $id = $this->id;
 
-        $context(function ($postEntity) use ($data, &$entity) {
-            $postEntity->id = $data['id'] ?? 0;
-            $postEntity->title = $data['title'] ?? '--missing title--';
-            $postEntity->content = $data['content'] ?? '--no content--';
+        $context(function () use ($data, &$entity, $id) {
+            // $this points to PostEntity instance, and acts same as if it was implemented there
+            // to access private properties from EntityHydrator, pass it as "use"
+            $this->id = $data['id'] ?? 0;
+            $this->title = $data['title'] ?? '--missing title--';
+            $this->content = $data['content'] ?? '--no content--';
 
-            $entity = $postEntity;
+            var_dump('Entity id ' . $id);
+
+            $entity = $this;
         }, PostEntity::class);
 
-        $context(function ($commentEntity) use ($data, &$entity) {
-            $commentEntity->postId = $data['postId'] ?? null;
-            $commentEntity->comment = $data['comment'] ?? '--no content--';
+        $context(function () use ($data, &$entity) {
+            $this->postId = $data['postId'] ?? null;
+            $this->comment = $data['comment'] ?? '--no content--';
 
-            $entity = $commentEntity;
+            $entity = $this;
         }, CommentEntity::class);
 
         return $entity;
