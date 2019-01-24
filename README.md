@@ -125,15 +125,16 @@ Using proper way of accessing data, script provides access to private properties
     
         class EntityHydrator
         {
-            public static function hydrate(callable $context, array $data): void
+            public function hydrate(callable $context, array $data): void
             {
                 // $context callable provide us with instance of target as parameter
                 // in this case called $postEntity, and script has access to its private properties
-                $context(function ($user) use ($data) {
+                // $this is instance of target object that is being decorated
+                $context(function () use ($data) {
                     // id, firstName, lastName are private properties
-                    $user->id = $data['id'] ?? null;
-                    $user->firstName = $data['firstName'] ?? null;
-                    $user->lastName = $data['lastName'] ?? null;
+                    $this->id = $data['id'] ?? null;
+                    $this->firstName = $data['firstName'] ?? null;
+                    $this->lastName = $data['lastName'] ?? null;
                 }, User::class);
             }
         }
